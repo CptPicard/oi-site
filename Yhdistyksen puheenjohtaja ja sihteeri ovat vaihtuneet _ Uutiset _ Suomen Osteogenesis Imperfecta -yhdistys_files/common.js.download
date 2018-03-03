@@ -1,0 +1,384 @@
+var modified = new Array();
+var modifiedMsg = 'Tietoja muutettu <span class="ui-icon ui-icon-alert"></span>';
+
+$(document).ready(function()
+{
+	$('form').not('.no-trigger').children().change(function() { 
+		section = $(this).parents('div.ui-content').attr('id');
+		ajaxLoad(section, modifiedMsg);
+		setModified(section); 
+	}); 
+	
+	$('table.colors tbody tr:not([th]):odd').addClass('odd');
+	$('table.colors tbody tr:not([th]):even').addClass('even');
+	
+	makeButtons();
+	matchHeights();
+	externalLinks();
+});
+
+function makeButtons()
+{
+	$('.button-login').button({
+		icons: {
+			primary: 'ui-icon-key'
+		}
+	});
+	$('.button-window').button({
+		icons: {
+			primary: 'ui-icon-newwin'
+		}
+	});
+	$('.button-gear').button({
+		icons: {
+			primary: 'ui-icon-gear'
+		}
+	});
+	$('.button-link').button({
+		icons: {
+			primary: 'ui-icon-link'
+		}
+	});
+	$('.button-new').button({
+		icons: {
+			primary: 'ui-icon-plus'
+		}
+	});
+	$('.button-folder-open').button({
+		icons: {
+			primary: 'ui-icon-folder-open'
+		}
+	});
+	$('.button-folder-collapsed').button({
+		icons: {
+			primary: 'ui-icon-folder-collapsed'
+		}
+	});
+	$('.button-edit').button({
+		icons: {
+			primary: 'ui-icon-pencil'
+		}
+	});
+	$('.button-arrange').button({
+		icons: {
+			primary: 'ui-icon-arrowthick-2-n-s'
+		}
+	});
+	$('.button-archive').button({
+		icons: {
+			primary: 'ui-icon-calendar'
+		}
+	});
+	$('.button-back').button({
+		icons: {
+			primary: 'ui-icon-arrowthick-1-w'
+		}
+	});
+	$('.button-check').button({
+		icons: {
+			primary: 'ui-icon-check'
+		}
+	});
+	$('.button-category').button({
+		icons: {
+			primary: 'ui-icon-note'
+		}
+	});
+	$('.button-cart').button({
+		icons: {
+			primary: 'ui-icon-cart'
+		}
+	});
+	$('.button-delete').button({
+		icons: {
+			primary: 'ui-icon-trash'
+		}
+	});
+	$('.button-cancel').button({
+		icons: {
+			primary: 'ui-icon-cancel'
+		}
+	});
+	$('.button-search').button({
+		icons: {
+			primary: 'ui-icon-search'
+		}
+	});
+	$('.button-save').button({
+		icons: {
+			primary: 'ui-icon-disk'
+		}
+	});
+	$('.button-sort').button({
+		icons: {
+			primary: 'ui-icon-shuffle'
+		}
+	});
+	$('.button-cart').button({
+		icons: {
+			primary: 'ui-icon-cart'
+		}
+	});
+	$('.button-print').button({
+		icons: {
+			primary: 'ui-icon-print'
+		}
+	});
+	$('.button').button();
+	
+	// Pagination custom buttons
+	$('.pagination-button-next a').button({
+		text: false,
+		icons: {
+			primary: 'ui-icon-triangle-1-e'
+		}
+	});
+	$('.pagination-button-prev a').button({
+		text: false,
+		icons: {
+			primary: 'ui-icon-triangle-1-w'
+		}
+	});
+	$('.pagination-button-first a').button({
+		text: false,
+		icons: {
+			primary: 'ui-icon-seek-start'
+		}
+	});
+	$('.pagination-button-last a').button({
+		text: false,
+		icons: {
+			primary: 'ui-icon-seek-end'
+		}
+	});
+	
+	// Napit ilman tekstiä
+	$('.button-no-text').each(function(){
+		$(this).button('option', 'text', false)
+	});
+}
+
+function setHeights(_target, _height)
+{
+	var height = 0;
+	targets = $(_target).children('div.ui-match-height > div:not(.ui-clear)');
+	targets.each(function()
+	{
+		$(this).css('height', '');
+		theight = $(this).height();
+		if(theight > height)
+		{
+			height = theight;
+		}
+	});
+	targets.each(function()
+	{
+		$(this).css('height', height+'px');
+		height2 = 0;
+		$(this).children('div').each(function()
+		{
+			height2 = height2 + $(this).outerHeight(true);
+		});
+		$(this).children('div.ui-footer').each(function()
+		{
+			$(this).css('bottom', '');
+		});
+		if(height > height2)
+		{
+			movement = height - height2;
+			$(this).children('div.ui-footer').each(function()
+			{
+				$(this).css('bottom', '-'+movement+'px')
+			});	
+		}
+	}); 
+}
+
+function matchHeights(target)
+{
+	if(target != undefined) 
+	{
+		target = $('#'+target);
+		height = target.outerHeight();
+		setHeights(target, height);
+	}
+	else
+	{
+		$('div.ui-match-height').each(function()
+		{
+			target = $(this);
+			height = target.outerHeight();
+			setHeights(target, height)
+		});
+	}
+}
+
+function processAjaxResponse(data)
+{
+    // 'data' is the json object returned from the server 
+	switch (data.type)
+	{
+		case 'error-multi':
+			$('#dialog').html('');
+			jQuery.each(data.errors, function(i, val)
+			{
+				$('#dialog').append('<p>'+val+'</p>');
+			});
+			$('#dialog').dialog(
+			{
+				modal: true,
+				title: 'Virheitä!',
+				resizable: false,
+				buttons:
+				{
+					Ok: function()
+					{
+						$(this).dialog('destroy');
+					}
+				},
+				close: function()
+				{
+					$(this).dialog('destroy');
+				}
+			});
+			return false;
+		break;
+		case 'error':
+			// 'data' is the json object returned from the server 
+			// alert(data.message); 
+			$('#dialog').html(data.message);
+			$('#dialog').dialog(
+			{
+				modal: true,
+				title: 'Virhe!',
+				resizable: false,
+				buttons:
+				{
+					Ok: function()
+					{
+						$(this).dialog('destroy');
+					}
+				},
+				close: function()
+				{
+					$(this).dialog('destroy');
+				}
+			});
+			return false;
+		break;
+		case 'error-login':
+			$('#dialog').html('Sessiosi on päättynyt.<br />Ole hyvä ja kirjaudu sisään uudelleen<br />ennen kun klikkaat Ok.');
+			$('#dialog').dialog(
+			{
+				modal: true,
+				title: 'Sessio päättynyt!',
+				resizable: false,
+				buttons:
+				{
+					Ok: function()
+					{
+						$(this).dialog('destroy');
+						window.location.reload();
+					}
+				},
+				close: function()
+				{
+					$(this).dialog('destroy');
+					window.location.reload();
+				}
+			});
+			return false;
+		break;
+		case 'allok':
+			return true;
+		break;
+	}
+}
+
+function errorHandler(msg)
+{
+    // 'data' is the json object returned from the server 
+    // alert(data.message); 
+	$('#dialog').html(msg);
+	$('#dialog').dialog(
+	{
+		modal: true,
+		resizable: false,
+		title: 'Virhe!',
+		buttons:
+		{
+			Ok: function()
+			{
+				$(this).dialog('destroy');
+			}
+		},
+		close: function()
+		{
+			$(this).dialog('destroy');
+		}
+	});
+}
+
+function ajaxLoad(section, message)
+{
+	$('#loading_'+section).html(message);
+	$('#loading_'+section).show();
+}
+
+function ajaxLoadOff(section, message)
+{
+	$('#loading_'+section).html(message);
+	$('#loading_'+section).show().delay(5000).fadeOut('fast', function()
+	{
+		loc = jQuery.inArray(section, modified);
+		if(loc != -1)
+		{
+			ajaxLoad(section, modifiedMsg);
+		}
+	});
+}
+
+function setModified(section)
+{
+	loc = jQuery.inArray(section, modified);
+	if(loc != -1)
+	{
+		modified.push(section);
+	}
+}
+
+function unsetModified(section)
+{
+	loc = jQuery.inArray(section, modified);
+	if(loc != -1)
+	{
+		modified.splice(loc, 1);
+	}
+}
+
+function confirmExit()
+{
+	if(modified.length > 0)
+	{
+		msg = 'Tietoja on muutettu muttei tallennettu! Oletko varma että haluat poistua sivulta?';
+		return msg;
+	}
+	else if (swfu.getStats().files_queued > 0)
+	{
+		return 'Sinulla on kuvien lataus kesken! Oletko varma että haluat keskeyttää latauksen ja poistua sivulta?';
+	}
+}
+
+function externalLinks()
+{
+	if (!document.getElementsByTagName)
+		return;
+	var anchors = document.getElementsByTagName('a');
+	for (var i=0; i<anchors.length; i++)
+	{
+		var anchor = anchors[i];
+		if (anchor.getAttribute('href') &&
+			anchor.getAttribute('rel') == 'external')
+				anchor.target = '_blank';
+	}
+}

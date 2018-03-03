@@ -1,0 +1,16 @@
+$(window).load(function() {
+	$('#slider').nivoSlider({
+		effect: 'boxRainReverse',
+		boxCols: 8, // For box animations
+		boxRows: 4, // For box animations
+		animSpeed: 500, // Slide transition speed
+		pauseTime: 6000, // How long each slide will show
+		directionNav: true, // Next & Prev navigation
+        directionNavHide: true, // Only show on hover
+        controlNav: false, // 1,2,3... navigation
+		pauseOnHover: true, // Stop animation while hovering
+		prevText: 'Edellinen', // Prev directionNav text
+        nextText: 'Seuraava', // Next directionNav text
+		randomStart: true // Start on a random slide
+	});
+});
